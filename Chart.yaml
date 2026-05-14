@@ -1,0 +1,12 @@
+apiVersion: v2
+name: bluegreen-deployment-helm
+description: A Helm chart for blue-green deployment with Argo Rollouts
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - blue-green
+  - argo-rollouts
+  - deployment
+maintainers:
+  - name: marcuwynu23
