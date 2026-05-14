@@ -1,0 +1,100 @@
+# Default values for bluegreen-deploy
+global:
+  namespace: default
+
+backend:
+  image:
+    repository: ghcr.io/marcuwynu23/express-typescript-sample
+    tag: sha-7f74f7b
+    pullPolicy: Always
+  
+  replicaCount: 3
+  
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  
+  rollout:
+    strategy: blueGreen
+    activeService: backend-service
+    previewService: backend-preview-service
+    autoPromotionEnabled: false
+    scaleDownDelaySeconds: 30
+  
+  env:
+    - name: NODE_ENV
+      value: production
+    - name: PORT
+      value: "3000"
+
+frontend:
+  image:
+    repository: ghcr.io/marcuwynu23/vite-app-sample
+    tag: sha-a6af942
+    pullPolicy: Always
+  
+  replicaCount: 2
+  
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+  
+  servicePreview:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+  
+  ingress:
+    enabled: true
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+    hosts:
+      - host: app.example.com
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: frontend-tls
+        hosts:
+          - app.example.com
+  
+  hpa:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  
+  resources:
+    limits:
+      cpu: 300m
+      memory: 256Mi
+    requests:
+      cpu: 150m
+      memory: 128Mi
+  
+  rollout:
+    strategy: blueGreen
+    activeService: frontend-service
+    previewService: frontend-preview-service
+    autoPromotionEnabled: false
+    scaleDownDelaySeconds: 30
+  
+  env:
+    - name: VITE_API_URL
+      value: http://backend-service:3000
+
+namespace:
+  name: bluegreen
+  create: true
